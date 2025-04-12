@@ -1,46 +1,86 @@
-const http = require('http');
+const http = require('http')
 const url = require('url');
-const queryStr = require('querystring');
 
-const users = [
-    {id:1,name:'pritam',email:"hello@gam"},
-    {id:2,name:"varun",email:"gklfkflgkf@gmail.com"}
-]
+let items = [];
+let id = 1;
 
-const server  =  http.createServer((req,res)=>{
-    const parseUrl  = url.parse(req.url,true);
+const server = http.createServer((req,res)=>{
+    const parseUrl = url.parse(req.url,true);
+    let method = req.method;
     const pathname = parseUrl.pathname;
-    const method = req.method;
-    res.setHeader("Content-type",'application/json');
-    if(pathname === '/users'){
-        if(method ==='GET'){
-            res.statusCode=200
-            res.end(JSON.stringify(users))
-        }
-        else if(method === 'POST'){
-            let body = '';
-            req.on('data',chunk=>{
-                body+=chunk;
-            })
-            req.on('end',()=>{
-                const newUser = JSON.parse(body);
-                newUser.id = users.length + 1;
-                users.push(newUser);
-                res.statusCode = 200;
-                res.end(JSON.stringify({message:"user created successfully"}))
-            })
 
-        }else{
-            res.statusCode = 400;
-            res.end(JSON.stringify({message:"user not created successfully"}))
+    const sendJson = (status,data)=>{
+        res.writeHead(status,{'content-type':'application/json'})
+        res.end(JSON.stringify(data))
+    }
+    const parseBody = (req,cb)=>{
+        let body = '';
+        req.on('data',chunk => body+=chunk);
+        req.on('end',()=>{
+            try{
+                const parsed = JSON.parse(body);
+                cb(null,parsed)
+            }
+            catch(err){
+                cb(err)
+            }
+        })
+    }
+    if(pathname === '/items' && method === 'GET'){
+        sendJson(200,items)
+    }
+    else if(pathname === '/items' && method === 'POST'){
+        parseBody(req,(err,body)=>{
+            if(err) return sendJson(400,{error:"invalid json"})
+                // console.log("ddddd",body.parseBody(req),"wwwwww");
+                
+                const newItem = {id:id++,...body};
+            items.push(newItem)
+            sendJson(201,newItem)
+        })
+    }
+    else if (pathname.startsWith('/items/') && method === 'GET'){
+        const itemId =parseInt(pathname.split('/')[2]);
+        const item = items.find(i=>i.id === itemId);
+        if(!item){
+            return sendJson(404,{error:'item not found'})
         }
-
+        sendJson(200,item)
+    }
+    else if(pathname.startsWith('/items/') && method === 'PUT'){
+        const itemId =parseInt(pathname.split('/')[2]);
+        console.log(itemId);
+        
+        const item = items.find(i=>i.id === itemId);
+        if(!item){
+            return sendJson(404,{error:'item not found'})
+        }
+        parseBody(req,(err,body)=>{
+            if(err) return sendJson(400,{error:"invalid JSON"})
+                Object.assign(item,body);
+                sendJson(200,item)
+        }) 
+    }
+    else if(pathname.startsWith('/items/') && method === 'DELETE'){
+        const itemId =parseInt(pathname.split('/')[2]);
+        const item = items.findIndex(i=>i.id === itemId);
+        if(item === -1){
+            return sendJson(404,{error:'item not found'})
+        }
+        const deleted = items.splice(item,1);
+        sendJson(200,deleted[0]);
+    }
+    else if(pathname === '/deleteAll' && method === 'DELETE'){
+        items =[];
+        sendJson(200,{success: 'deleted successfully'});
 
     }
-
+    else{
+        sendJson(404,{error:'route not found'})
+    }
 })
 
-server.listen(8000,()=>{
-    console.log('server running at 8000');
+server.listen(4000,()=>{
+    console.log('running on 4000');
     
 })
