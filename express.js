@@ -23,6 +23,47 @@ app.post('/addProduct',(req,res)=>{
     // console.log({name,qty,title,price,description,img},"dddd");
     
 })
+app.get('/product/:id',(req,res)=>{
+    let {id} = req.params;
+    console.log(req.params);
+    
+    let prod= product.find((val)=> val.id == id )
+    res.send({
+        status:true,
+        data:prod
+    })
+})
+
+app.put('/product/:id',(req,res)=>{
+    let {id} = req.params;
+    let index =product.findIndex((val)=>val.id == id)
+    if(index !==-1){
+        product[index] = { ...product[index],...req.body }
+    }
+    res.send({
+        status:true,
+        data:product[index]
+    })
+})
+app.delete('/product/:id',(req,res)=>{
+    let {id} = req.params;
+   let isExist = product.find((val)=>val.id == id)
+   if(isExist){
+    product= product.filter((val)=>val.id != id)
+    res.send({
+        status:false,
+        data:product
+    })
+
+   }
+   else{
+    res.send({
+        status:false,
+        message:"product not found"
+    })
+   }
+})
+
 
 
 
