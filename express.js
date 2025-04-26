@@ -18,6 +18,9 @@ app.post('/addProduct',(req,res)=>{
     product.push({id:id++,name,qty,title,price,description,img})
     res.send({
         status:true,
+
+
+        
         message:"data inserted successfully"
     })
     // console.log({name,qty,title,price,description,img},"dddd");
