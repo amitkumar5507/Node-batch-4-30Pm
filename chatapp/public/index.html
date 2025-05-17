@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>WebSocket Chat</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 0;
+      margin: 0;
+      background: #f2f2f2;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    #chat {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      background: #fff;
+      border-bottom: 1px solid #ccc;
+    }
+    #input-area {
+      display: flex;
+      padding: 10px;
+      background: #eee;
+    }
+    #message {
+      flex: 1;
+      padding: 10px;
+      font-size: 16px;
+    }
+    #send {
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    #send:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="chat"></div>
+
+  <div id="input-area">
+    <input type="text" id="message" placeholder="Type your message..." />
+    <button id="send">Send</button>
+  </div>
+
+  <script>
+    const ws = new WebSocket(`ws://${location.host}`);
+
+    const chat = document.getElementById('chat');
+    const messageInput = document.getElementById('message');
+    const sendButton = document.getElementById('send');
+
+    ws.onmessage = (event) => {
+      const msg = document.createElement('div');
+      msg.textContent = event.data;
+      chat.appendChild(msg);
+      chat.scrollTop = chat.scrollHeight;
+    };
+
+    sendButton.onclick = () => {
+      const msg = messageInput.value.trim();
+      if (msg) {
+        ws.send(msg);
+        messageInput.value = '';
+      }
+    };
+
+    messageInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        sendButton.click();
+      }
+    });
+  </script>
+
+</body>
+</html>
